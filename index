@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InternTrack &bull; Internship Application Tracker</title>
+  <meta name="description" content="A simple, fast, and modern Internship Application Tracker built with pure HTML, CSS, and JavaScript.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Navigation Header -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-icon">🎓</div>
+        <div class="brand-text">
+          <span class="brand-title">Intern<span class="highlight">Track</span></span>
+          <span class="brand-badge">Pure JS</span>
+        </div>
+      </div>
+
+      <div class="nav-search">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search company, role, or location..." aria-label="Search applications">
+      </div>
+
+      <div class="nav-actions">
+        <button id="theme-toggle-btn" class="btn btn-icon" title="Toggle Theme" aria-label="Toggle Theme">
+          <span id="theme-icon">🌙</span>
+        </button>
+        <button id="import-export-btn" class="btn btn-secondary">
+          <span>💾</span> Backup & Export
+        </button>
+        <button id="add-app-btn" class="btn btn-primary">
+          <span>➕</span> Add Application
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-layout">
+    <!-- Top KPI Dashboard Cards -->
+    <section class="kpi-grid" id="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Total Applications</span>
+          <span class="kpi-icon icon-blue">📊</span>
+        </div>
+        <div class="kpi-value" id="kpi-total">0</div>
+        <div class="kpi-footer" id="kpi-goal-text">Goal: 20 applications</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Applied & Waiting</span>
+          <span class="kpi-icon icon-purple">⏳</span>
+        </div>
+        <div class="kpi-value" id="kpi-applied">0</div>
+        <div class="kpi-footer">Awaiting initial review</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">In Interviews</span>
+          <span class="kpi-icon icon-amber">🎙️</span>
+        </div>
+        <div class="kpi-value" id="kpi-interviewing">0</div>
+        <div class="kpi-footer" id="kpi-response-rate">Response rate: 0%</div>
+      </div>
+
+      <div class="kpi-card highlight-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Offers Received 🎉</span>
+          <span class="kpi-icon icon-emerald">🏆</span>
+        </div>
+        <div class="kpi-value highlight-text" id="kpi-offers">0</div>
+        <div class="kpi-footer">Congratulations!</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Rejected / Closed</span>
+          <span class="kpi-icon icon-rose">📉</span>
+        </div>
+        <div class="kpi-value" id="kpi-rejected">0</div>
+        <div class="kpi-footer">Keep pushing forward</div>
+      </div>
+    </section>
+
+    <!-- Goal Progress Tracker Bar -->
+    <section class="goal-tracker-card">
+      <div class="goal-header">
+        <div class="goal-info">
+          <span class="goal-title">🎯 Application Sprint Target</span>
+          <span class="goal-stats" id="goal-progress-stats">0 of 20 applications submitted</span>
+        </div>
+        <span class="goal-percent" id="goal-progress-percent">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar" id="goal-progress-bar" style="width: 0%;"></div>
+      </div>
+    </section>
+
+    <!-- Toolbar: View Modes & Filters -->
+    <section class="toolbar">
+      <div class="view-switchers">
+        <button id="view-board-btn" class="tab-btn active">
+          <span>📋</span> Kanban Board
+        </button>
+        <button id="view-table-btn" class="tab-btn">
+          <span>📑</span> Table View
+        </button>
+      </div>
+
+      <div class="filter-controls">
+        <div class="filter-group">
+          <label for="status-filter">Status:</label>
+          <select id="status-filter" class="select-dropdown">
+            <option value="ALL">All Statuses</option>
+            <option value="Wishlist">Wishlist</option>
+            <option value="Applied">Applied</option>
+            <option value="Interviewing">Interviewing</option>
+            <option value="Offer">Offer</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="location-filter">Work Mode:</label>
+          <select id="location-filter" class="select-dropdown">
+            <option value="ALL">All Modes</option>
+            <option value="Remote">Remote</option>
+            <option value="Hybrid">Hybrid</option>
+            <option value="On-site">On-site</option>
+          </select>
+        </div>
+
+        <button id="reset-data-btn" class="btn btn-ghost btn-sm" title="Reset to default sample data">
+          ↺ Reset Samples
+        </button>
+      </div>
+    </section>
+
+    <!-- VIEW 1: KANBAN BOARD -->
+    <section id="board-view" class="view-container active-view">
+      <div class="kanban-grid">
+        <!-- Column: Wishlist -->
+        <div class="kanban-col" data-status="Wishlist">
+          <div class="col-header border-purple">
+            <div class="col-title-wrap">
+              <span class="col-dot bg-purple"></span>
+              <span class="col-title">Wishlist</span>
+            </div>
+            <span class="col-badge" id="count-Wishlist">0</span>
+          </div>
+          <div class="cards-lane" id="lane-Wishlist" ondragover="event.preventDefault()"></div>
+        </div>
+
+        <!-- Column: Applied -->
+        <div class="kanban-col" data-status="Applied">
+          <div class="col-header border-blue">
+            <div class="col-title-wrap">
+              <span class="col-dot bg-blue"></span>
+              <span class="col-title">Applied</span>
+            </div>
+            <span class="col-badge" id="count-Applied">0</span>
+          </div>
+          <div class="cards-lane" id="lane-Applied" ondragover="event.preventDefault()"></div>
+        </div>
+
+        <!-- Column: Interviewing -->
+        <div class="kanban-col" data-status="Interviewing">
+          <div class="col-header border-amber">
+            <div class="col-title-wrap">
+              <span class="col-dot bg-amber"></span>
+              <span class="col-title">Interviewing</span>
+            </div>
+            <span class="col-badge" id="count-Interviewing">0</span>
+          </div>
+          <div class="cards-lane" id="lane-Interviewing" ondragover="event.preventDefault()"></div>
+        </div>
+
+        <!-- Column: Offer -->
+        <div class="kanban-col" data-status="Offer">
+          <div class="col-header border-emerald">
+            <div class="col-title-wrap">
+              <span class="col-dot bg-emerald"></span>
+              <span class="col-title">Offer Received</span>
+            </div>
+            <span class="col-badge" id="count-Offer">0</span>
+          </div>
+          <div class="cards-lane" id="lane-Offer" ondragover="event.preventDefault()"></div>
+        </div>
+
+        <!-- Column: Rejected -->
+        <div class="kanban-col" data-status="Rejected">
+          <div class="col-header border-rose">
+            <div class="col-title-wrap">
+              <span class="col-dot bg-rose"></span>
+              <span class="col-title">Rejected</span>
+            </div>
+            <span class="col-badge" id="count-Rejected">0</span>
+          </div>
+          <div class="cards-lane" id="lane-Rejected" ondragover="event.preventDefault()"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: TABLE VIEW -->
+    <section id="table-view" class="view-container">
+      <div class="table-card">
+        <div class="table-responsive">
+          <table class="data-table" id="applications-table">
+            <thead>
+              <tr>
+                <th onclick="sortTable('company')">Company <span class="sort-icon" id="sort-company">⇅</span></th>
+                <th onclick="sortTable('position')">Position / Role <span class="sort-icon" id="sort-position">⇅</span></th>
+                <th onclick="sortTable('status')">Status <span class="sort-icon" id="sort-status">⇅</span></th>
+                <th onclick="sortTable('workMode')">Work Mode <span class="sort-icon" id="sort-workMode">⇅</span></th>
+                <th onclick="sortTable('appliedDate')">Applied Date <span class="sort-icon" id="sort-appliedDate">⇅</span></th>
+                <th onclick="sortTable('salary')">Pay / Stipend <span class="sort-icon" id="sort-salary">⇅</span></th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="table-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+        <div id="table-empty-state" class="empty-state" style="display: none;">
+          <span class="empty-icon">📂</span>
+          <h3>No applications found</h3>
+          <p>Try adjusting your search filter or add a new application.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: ADD / EDIT APPLICATION -->
+  <div class="modal-overlay" id="app-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modal-title">Add Internship Application</h2>
+        <button class="btn-close" id="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="app-form">
+        <input type="hidden" id="form-app-id">
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="form-company" class="required">Company Name</label>
+            <input type="text" id="form-company" required placeholder="e.g. Google, Microsoft, Figma">
+          </div>
+          <div class="form-group flex-1">
+            <label for="form-position" class="required">Job Title / Role</label>
+            <input type="text" id="form-position" required placeholder="e.g. Software Engineer Intern">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="form-status" class="required">Stage / Status</label>
+            <select id="form-status" required>
+              <option value="Wishlist">Wishlist</option>
+              <option value="Applied" selected>Applied</option>
+              <option value="Interviewing">Interviewing</option>
+              <option value="Offer">Offer Received</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="form-workmode">Work Mode</label>
+            <select id="form-workmode">
+              <option value="Remote">Remote</option>
+              <option value="Hybrid">Hybrid</option>
+              <option value="On-site">On-site</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="form-location">Location / City</label>
+            <input type="text" id="form-location" placeholder="e.g. San Francisco, CA or Remote">
+          </div>
+          <div class="form-group flex-1">
+            <label for="form-date" class="required">Application Date</label>
+            <input type="date" id="form-date" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="form-salary">Pay / Stipend (Optional)</label>
+            <input type="text" id="form-salary" placeholder="e.g. $45/hr or $8,000/mo">
+          </div>
+          <div class="form-group flex-1">
+            <label for="form-url">Job Posting / Portal URL</label>
+            <input type="url" id="form-url" placeholder="https://careers.company.com/job/123">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="form-notes">Interview Notes & Questions</label>
+          <textarea id="form-notes" rows="3" placeholder="Key skills required, recruiter name, round details, interview questions..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="modal-save-btn">Save Application</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: BACKUP / IMPORT / EXPORT -->
+  <div class="modal-overlay" id="backup-modal" role="dialog" aria-modal="true" aria-labelledby="backup-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="backup-title">Data Backup & Export</h2>
+        <button class="btn-close" id="backup-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="backup-content">
+        <p class="text-muted">Download your application records or restore a saved backup.</p>
+
+        <div class="export-box">
+          <h3>📥 Export Data</h3>
+          <div class="btn-group">
+            <button id="export-json-btn" class="btn btn-secondary">
+              <span>📄</span> Download JSON
+            </button>
+            <button id="export-csv-btn" class="btn btn-secondary">
+              <span>📊</span> Download CSV Spreadsheet
+            </button>
+          </div>
+        </div>
+
+        <div class="import-box">
+          <h3>📤 Import Data</h3>
+          <p class="text-sm text-muted">Upload a previously exported JSON backup file:</p>
+          <input type="file" id="import-file-input" accept=".json" class="file-input">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="backup-done-btn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Script -->
+  <script src="app.js"></script>
+</body>
+</html>
